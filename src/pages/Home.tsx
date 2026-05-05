@@ -20,10 +20,11 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Only show approved posts in the main feed
+    // Only show approved posts that are marked as admin posts in the main feed
     const q = query(
       collection(db, 'posts'),
       where('status', '==', 'approved'),
+      where('isAdminPost', '==', true), // This ensures only admin posts show here
       orderBy('createdAt', 'desc'),
       limit(20)
     );
@@ -53,7 +54,7 @@ export default function Home() {
 
   return (
     <div className="space-y-4 pb-20 p-4">
-      <h2 className="text-xl font-bold text-gray-800 border-l-4 border-[#15803d] pl-3">সর্বশেষ খবর</h2>
+      <h2 className="text-xl font-bold text-gray-800 border-l-4 border-[#15803d] pl-3">সর্বশেষ খবর ও আপডেট</h2>
       
       {posts.length === 0 ? (
         <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-300">
@@ -95,12 +96,14 @@ export default function Home() {
                     })}
                   </span>
                 </div>
-                <a 
-                  href={`tel:${post.phone}`}
-                  className="bg-[#15803d] text-white px-3 py-1.5 rounded-full font-medium inline-flex items-center shadow-sm"
-                >
-                  যোগাযোগ করুন
-                </a>
+                {post.phone && (
+                  <a 
+                    href={`tel:${post.phone}`}
+                    className="bg-[#15803d] text-white px-3 py-1.5 rounded-full font-medium inline-flex items-center shadow-sm"
+                  >
+                    যোগাযোগ করুন
+                  </a>
+                )}
               </div>
             </div>
           </motion.div>
