@@ -6,12 +6,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compa
 // Note: These values should ideally come from environment but SW is static in public/
 // User can manually update these if they need real FCM in production.
 firebase.initializeApp({
-  apiKey: "AIzaSyChAGeKLygboNEsm-RMEAmi3GDhuTmQRy0",
-  authDomain: "gen-lang-client-0261425456.firebaseapp.com",
-  projectId: "gen-lang-client-0261425456",
-  storageBucket: "gen-lang-client-0261425456.firebasestorage.app",
-  messagingSenderId: "610285411879",
-  appId: "1:610285411879:web:7e07854bbab70df764b802",
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: "",
   measurementId: ""
 });
 
