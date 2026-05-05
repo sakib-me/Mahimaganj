@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '@/src/lib/firebase';
+import { db } from '@/src/lib/firebase';
 import { useAuth } from '@/src/hooks/useAuth';
 import { motion } from 'motion/react';
 import { Camera, Send, X } from 'lucide-react';
@@ -10,7 +9,7 @@ export default function Post() {
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('News');
+  const [category, setCategory] = useState('খবর');
   const [phone, setPhone] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -67,7 +66,7 @@ export default function Post() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setMessage({ type: 'error', text: 'image must be less than 5MB' });
+        setMessage({ type: 'error', text: 'Image must be less than 5MB' });
         return;
       }
       setImage(file);
@@ -91,7 +90,6 @@ export default function Post() {
       let imageData = '';
       if (image) {
         const compressedBlob = await compressImage(image);
-        // Convert Blob to Base64 to store in Firestore directly
         imageData = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result as string);
@@ -103,8 +101,8 @@ export default function Post() {
         title,
         description,
         category,
-        phone,
-        imageUrl: imageData, // This now stores the Base64 string
+        phone: phone || '',
+        imageUrl: imageData,
         authorId: user.uid,
         authorEmail: user.email,
         status: 'pending',
@@ -133,6 +131,17 @@ export default function Post() {
     );
   }
 
+  const categories = [
+    { value: 'খবর', label: 'খবর / নিউজ' },
+    { value: 'ডাক্তার', label: 'ডাক্তার' },
+    { value: 'রক্তদাতা', label: 'রক্তদাতা' },
+    { value: 'ইলেক্ট্রিশিয়ান', label: 'ইলেক্ট্রিশিয়ান' },
+    { value: 'বিভিন্ন সার্ভিস', label: 'বিভিন্ন সার্ভিস' },
+    { value: 'হারানো বিজ্ঞপ্তি', label: 'হারানো বিজ্ঞপ্তি' },
+    { value: 'ক্রয়/বিক্রয়', label: 'ক্রয়/বিক্রয়' },
+    { value: 'অন্যান্য', label: 'অন্যান্য' },
+  ];
+
   return (
     <div className="p-4 space-y-6 pb-24">
       <div className="flex items-center space-x-2">
@@ -148,10 +157,9 @@ export default function Post() {
             onChange={(e) => setCategory(e.target.value)}
             className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-[#15803d]"
           >
-            <option value="News">খবর</option>
-            <option value="Event">অনুষ্ঠান</option>
-            <option value="Announcement">ঘোষণা</option>
-            <option value="Question">প্রশ্ন/সহযোগিতা</option>
+            {categories.map((cat) => (
+              <option key={cat.value} value={cat.value}>{cat.label}</option>
+            ))}
           </select>
         </div>
 
@@ -180,11 +188,10 @@ export default function Post() {
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-bold text-gray-400 uppercase ml-1">ফোন নম্বর</label>
+          <label className="text-xs font-bold text-gray-400 uppercase ml-1">ফোন নম্বর (ঐচ্ছিক)</label>
           <input 
-            required
             type="tel" 
-            placeholder="যোগাযোগের নম্বর..."
+            placeholder="যোগাযোগের নম্বর (ঐচ্ছিক)..."
             className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-[#15803d]"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -196,7 +203,6 @@ export default function Post() {
           <div className="flex items-center space-x-4">
             <label className="cursor-pointer bg-gray-100 hover:bg-gray-200 border-2 border-dashed border-gray-300 rounded-xl w-32 h-32 flex flex-col items-center justify-center transition-colors">
               <Camera className="text-gray-400 mb-2" size={32} />
-              <span className="text-[10px] font-bold text-gray-500 uppercase">ছবি যোগ করুন</span>
               <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
             </label>
             
@@ -216,30 +222,19 @@ export default function Post() {
         </div>
 
         {message && (
-          <motion.div 
-            initial={{ opacity: 0, x: -10 }} 
-            animate={{ opacity: 1, x: 0 }}
-            className={`p-4 rounded-xl text-sm font-medium ${
-              message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-            }`}
-          >
+          <div className={`p-4 rounded-xl text-sm font-medium ${
+            message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}>
             {message.text}
-          </motion.div>
+          </div>
         )}
 
         <button
           disabled={submitting}
           type="submit"
-          className="w-full bg-[#15803d] text-white py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 shadow-lg shadow-[#15803d]/30 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
+          className="w-full bg-[#15803d] text-white py-4 rounded-2xl font-bold active:scale-95 transition-all disabled:opacity-50"
         >
-          {submitting ? (
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-          ) : (
-            <>
-              <Send size={20} />
-              <span>পোস্ট পাবলিশ করুন</span>
-            </>
-          )}
+          {submitting ? 'জমাদান করা হচ্ছে...' : 'পোস্ট পাবলিশ করুন'}
         </button>
       </form>
     </div>
