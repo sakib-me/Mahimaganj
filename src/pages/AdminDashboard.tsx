@@ -20,7 +20,6 @@ export default function AdminDashboard() {
   const [posts, setPosts] = useState<PostData[]>([]);
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [loading, setLoading] = useState(true);
-  const [editingPost, setEditingPost] = useState<PostData | null>(null);
 
   useEffect(() => {
     const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
@@ -44,7 +43,7 @@ export default function AdminDashboard() {
       });
     } catch (error) {
       console.error("Error updating status:", error);
-      alert("Status আপডেট করতে সমস্যা হয়েছে। এডমিন পারমিশন চেক করুন।");
+      alert("Error updating status. Please check your admin permissions.");
     }
   };
 
@@ -57,6 +56,8 @@ export default function AdminDashboard() {
       }
     }
   };
+
+  const [editingPost, setEditingPost] = useState<PostData | null>(null);
 
   const updatePost = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,18 +72,17 @@ export default function AdminDashboard() {
         updatedAt: serverTimestamp()
       });
       setEditingPost(null);
-      alert("পোস্ট সফলভাবে আপডেট করা হয়েছে!");
+      alert("Post updated successfully!");
     } catch (error) {
       console.error("Error updating post:", error);
-      alert("পোস্ট আপডেট করা সম্ভব হয়নি।");
+      alert("Failed to update post.");
     }
   };
 
   const filteredPosts = posts.filter(p => p.status === filter);
 
   return (
-    <div className="p-4 space-y-6 pb-24">
-      {/* Edit Modal */}
+    <div className="p-4 space-y-6">
       <AnimatePresence>
         {editingPost && (
           <motion.div
@@ -112,10 +112,14 @@ export default function AdminDashboard() {
                       onChange={(e) => setEditingPost({...editingPost, category: e.target.value})}
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-[#15803d]"
                     >
-                      <option value="News">খবর</option>
-                      <option value="Event">অনুষ্ঠান</option>
-                      <option value="Announcement">ঘোষণা</option>
-                      <option value="Question">প্রশ্ন/সহযোগিতা</option>
+                      <option value="খবর">খবর / নিউজ</option>
+                      <option value="ডাক্তার">ডাক্তার</option>
+                      <option value="রক্তদাতা">রক্তদাতা</option>
+                      <option value="ইলেক্ট্রিশিয়ান">ইলেক্ট্রিশিয়ান</option>
+                      <option value="বিভিন্ন সার্ভিস">বিভিন্ন সার্ভিস</option>
+                      <option value="হারানো বিজ্ঞপ্তি">হারানো বিজ্ঞপ্তি</option>
+                      <option value="ক্রয়/বিক্রয়">ক্রয়/বিক্রয়</option>
+                      <option value="অন্যান্য">অন্যান্য</option>
                     </select>
                   </div>
 
@@ -142,9 +146,8 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-400 uppercase ml-1">ফোন নম্বর</label>
+                    <label className="text-xs font-bold text-gray-400 uppercase ml-1">ফোন নম্বর (ঐচ্ছিক)</label>
                     <input 
-                      required
                       type="tel" 
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-[#15803d]"
                       value={editingPost.phone}
@@ -165,8 +168,7 @@ export default function AdminDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Filter Tabs */}
-      <div className="flex bg-white p-1 rounded-2xl border border-gray-100 shadow-sm sticky top-0 z-40">
+      <div className="flex bg-white p-1 rounded-2xl border border-gray-100 shadow-sm">
         {(['pending', 'approved', 'rejected'] as const).map((s) => (
           <button
             key={s}
@@ -180,7 +182,6 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Posts List */}
       <div className="space-y-4">
         {loading ? (
           <div className="flex justify-center p-12">
@@ -206,14 +207,14 @@ export default function AdminDashboard() {
                 )}
                 <div className="p-4 space-y-3">
                   <div className="flex justify-between items-start">
-                    <div className="flex-1 mr-2">
+                    <div>
                       <span className="text-[10px] font-black uppercase text-[#15803d] tracking-widest">
                         {post.category}
                       </span>
                       <h3 className="font-bold text-gray-900 leading-tight">{post.title}</h3>
-                      <p className="text-[10px] text-gray-400 mt-0.5">{post.authorEmail}</p>
+                      <p className="text-xs text-gray-500 mt-1">{post.authorEmail}</p>
                     </div>
-                    <div className="flex space-x-1">
+                    <div className="flex space-x-2">
                        <button onClick={() => setEditingPost(post)} className="p-2 text-[#15803d] bg-[#15803d]/10 rounded-lg">
                           <Edit2 size={16} />
                        </button>
@@ -226,10 +227,6 @@ export default function AdminDashboard() {
                   <p className="text-xs text-gray-600 line-clamp-2">{post.description}</p>
                   
                   <div className="flex items-center space-x-2 pt-2">
-                     <a href={`tel:${post.phone}`} className="p-2.5 bg-gray-50 text-gray-600 rounded-xl">
-                       <Phone size={18} />
-                     </a>
-                     
                      {filter === 'pending' && (
                        <>
                          <button 
@@ -237,31 +234,31 @@ export default function AdminDashboard() {
                            className="flex-1 bg-green-500 text-white py-2.5 rounded-xl font-bold flex items-center justify-center space-x-1 shadow-lg shadow-green-500/20"
                          >
                            <Check size={18} />
-                           <span>অনুমোদন</span>
+                           <span>Approve</span>
                          </button>
                          <button 
                            onClick={() => updateStatus(post.id, 'rejected')}
                            className="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-bold flex items-center justify-center space-x-1"
                          >
                            <X size={18} />
-                           <span>প্রত্যাখ্যান</span>
+                           <span>Reject</span>
                          </button>
                        </>
                      )}
                      {filter === 'approved' && (
                        <button 
                          onClick={() => updateStatus(post.id, 'rejected')}
-                         className="flex-1 bg-red-50 text-red-600 py-2.5 rounded-xl font-bold"
+                         className="flex-1 bg-red-100 text-red-600 py-2.5 rounded-xl font-bold"
                        >
-                         প্রত্যাখ্যান করুন
+                         Reject
                        </button>
                      )}
                      {filter === 'rejected' && (
                        <button 
                          onClick={() => updateStatus(post.id, 'approved')}
-                         className="flex-1 bg-green-50 text-green-600 py-2.5 rounded-xl font-bold"
+                         className="flex-1 bg-green-100 text-green-600 py-2.5 rounded-xl font-bold"
                        >
-                         অনুমোদন দিন
+                         Approve
                        </button>
                      )}
                   </div>
