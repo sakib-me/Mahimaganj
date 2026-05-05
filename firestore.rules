@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == "nazmussakib.dpi@gmail.com";
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation for Post
+    function isValidPost(data) {
+      return data.title is string && data.title.size() <= 200 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.category is string &&
+             data.phone is string && data.phone.size() <= 20 &&
+             (data.imageUrl == "" || (data.imageUrl is string && data.imageUrl.size() <= 200000)) &&
+             data.status in ['pending', 'approved', 'rejected'];
+    }
+
+    // Collections
+    match /posts/{postId} {
+      // Anyone can read approved posts. Admin can read all.
+      allow get: if existing().status == 'approved' || isAdmin() || isOwner(existing().authorId);
+      allow list: if (resource.data.status == 'approved') || isAdmin();
+
+      // Users can create posts, but status must be 'pending'
+      allow create: if isEmailVerified() && 
+                    isValidPost(incoming()) && 
+                    incoming().status == 'pending' &&
+                    incoming().authorId == request.auth.uid &&
+                    incoming().createdAt == request.time;
+
+      // Only Admin can update status or other fields
+      // Owners can only delete if not approved? Let's say only admin can update.
+      allow update: if isAdmin() && isValidPost(incoming()) && incoming().updatedAt == request.time;
+      
+      // Admin or Owner can delete
+      allow delete: if isAdmin() || isOwner(existing().authorId);
+    }
+
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+  }
+}

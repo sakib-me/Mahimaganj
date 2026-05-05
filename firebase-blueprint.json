@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "Post": {
+      "title": "Post",
+      "description": "A news or community post",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "phone": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "authorId": { "type": "string" },
+        "authorEmail": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "category", "phone", "status", "authorId", "createdAt"]
+    },
+    "Service": {
+      "title": "Service",
+      "description": "A directory listing for a service",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "phone": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["name", "category", "phone"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile data",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] }
+      },
+      "required": ["email"]
+    }
+  },
+  "firestore": {
+    "posts": {
+      "schema": "Post",
+      "description": "Community posts and news"
+    },
+    "services": {
+      "schema": "Service",
+      "description": "Directory of town services"
+    },
+    "users": {
+      "schema": "User",
+      "description": "User profiles"
+    }
+  }
+}

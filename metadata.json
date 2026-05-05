@@ -1,0 +1,6 @@
+{
+  "name": "Mahimaganj Hub",
+  "description": "A community PWA for Mahimaganj town featuring news, service directory, and moderated posts.",
+  "requestFramePermissions": ["notifications"],
+  "majorCapabilities": []
+}
